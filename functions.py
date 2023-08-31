@@ -2,8 +2,9 @@ import csv
 import os
 import pandas as pd
 import openai
+from fpdf import FPDF
 
-openai.api_key = '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'
+openai.api_key = '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'
 
 def menu():
     """
@@ -18,7 +19,7 @@ def menu():
         3 - DIETA
         4 - TREINO
         5 - ROTINA 
-        6 - TUDO
+        6 - TUDO(Dieta, Treino, Rotina)
     ''')
 
     menu = int(input('DIGITE O NUMERO DA OPÇÃO:  '))
@@ -270,18 +271,21 @@ def dieta(user_info):
     Returns:
         texto gerado pelo chat gpt (dieta).
     """
-    prompt = f"Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}\napenas me de 7 refeiçoes bem detalhadas com base nisso em tópicos"
+    comentario = str(input('Digite suas restrições alimentares:  '))
+    prompt = f"""Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}
+    \napenas me de 5 refeiçoes bem detalhadas (24h) em tópicos. Condições = ({comentario})"""
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are an excellent nutritionist."},
             {"role": "user", "content": prompt},
         ]
     )
 
     dieta_text = response.choices[0].message['content'].strip()
-    save_to_txt(dieta_text, 'Dieta')
+    save_to_txt(user_info ,dieta_text, 'Dieta')
+    save_to_pdf(user_info ,dieta_text, 'Dieta')
     
 
 
@@ -295,18 +299,22 @@ def treino(user_info):
     Returns:
         texto gerado pelo chat gpt (treino).
     """
-    prompt = f"Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}\npenas me de 3 treinos hipertroficos bem detalhados completo em tópicos, sem explicação"
+    objetivo = str(input('Digite seu objetivo de treino :  '))
+    condicao = str(input('Se possuir, digite alguma restrição física  :  '))
+    prompt = f"""Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}
+    \napenas me de 3 treinos {objetivo} bem detalhados completo em tópicos, sem explicação"""
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are an excellent nutritionist"},
             {"role": "user", "content": prompt},
         ]
     )
 
     treino_text = response.choices[0].message['content'].strip()
-    save_to_txt(treino_text, 'Treino')
+    save_to_txt(user_info,treino_text, 'Treino')
+    save_to_pdf(user_info,treino_text, 'Treino')
 
 
 
@@ -320,33 +328,51 @@ def rotina(user_info):
     Returns:
         texto gerado pelo chat gpt (rotina).
     """
-   
+    restricoes = str(input('Se houver digite uma restrição:  '))
     prompt = f"Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}\napenas me de uma rotina de bons Habitos (24H) detalhada com base nisso em topicos, sem explicaçao"
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are an excellent nutritionist."},
             {"role": "user", "content": prompt},
         ]
     )
 
     rotina_text = response.choices[0].message['content'].strip()
-    save_to_txt(rotina_text, 'Rotina')
+    save_to_txt(user_info,rotina_text, 'Rotina')
+    save_to_pdf(user_info,rotina_text, 'Rotina')
 
 
 
-def save_to_txt(content, filename):
+
+
+def save_to_txt(user_info, content, filename):
     """
-    Salva o conteúdo em um arquivo de texto.
+    Salva o conteúdo em um arquivo de texto dentro de uma pasta com o nome do usuário.
 
     Args:
+        user_info (dict): Informações do usuário, incluindo o nome.
         content (str): O conteúdo que será salvo no arquivo.
-        filename (str): O nome para o arquivo .
+        filename (str): O nome base para o arquivo.
     """
-    filename = filename + '.txt'
+    user_folder = user_info['nome']
+    os.makedirs(user_folder, exist_ok=True) 
+    filename = os.path.join(user_folder, f"{filename}_{user_info['nome']}.txt")
+    
     with open(filename, "w") as file:
         file.write(content)
     print(f"Arquivo '{filename}' salvo com sucesso.")
 
 
+
+def save_to_pdf(user_info,content, filename):
+    user_folder = user_info['nome']
+    os.makedirs(user_folder, exist_ok=True)  
+    filename = os.path.join(user_folder, f"{filename}_{user_info['nome']}.pdf")
+    
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, content)
+    pdf.output(filename +'_'+ user_info['nome']+'.pdf')    
