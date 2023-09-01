@@ -1,3 +1,4 @@
+from time import sleep
 import csv
 import os
 import pandas as pd
@@ -5,6 +6,7 @@ import openai
 from fpdf import FPDF
 
 openai.api_key = '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'
+
 
 def menu():
     """
@@ -14,13 +16,13 @@ def menu():
     print(f"{'PROJETO VERÃO':^98}")
     print('='*98)
     print('''   
-        1 - CADASTRAR USUARIO
-        2 - IMC/BASAl
-        3 - DIETA
-        4 - TREINO
-        5 - ROTINA 
-        6 - TUDO(Dieta, Treino, Rotina)
-    ''')
+                                        1 - CADASTRAR USUARIO
+                                        2 - IMC/BASAl
+                                        3 - DIETA
+                                        4 - TREINO
+                                        5 - ROTINA 
+                                        6 - TUDO (Dieta, Treino, Rotina)
+''')
 
     menu = int(input('DIGITE O NUMERO DA OPÇÃO:  '))
 
@@ -160,8 +162,8 @@ def cadastrar_usuarios():
                     print('Por favor, digite um número válido para o nível de atividade.')
             continuar = input('Deseja inserir outro usuário? (s/n) ')
             if continuar.lower() != 's':
-                print('Programa encerrado.')
-                break
+                print('='*25)
+                choice()
             
             
             
@@ -173,9 +175,13 @@ def saude_geral(arquivo_csv):
         arquivo_csv (str): O caminho para o arquivo CSV contendo informações dos usuários.
 
     """
-    print("="*115)
-    print (f"{'CALCULO DO IMC E GASTO BASAL':^95}")
-    print("="*115)
+    print('\033[34m')
+    print("="*101)
+    print('\033[0m')
+    print(f"\033[1m{'CALCULO DO IMC E GASTO BASAL':^95}\033[m")
+    print('\033[34m')
+    print("="*101)
+    print('\033[0m')
 
 
     df = pd.read_csv(arquivo_csv, delimiter=',')
@@ -196,8 +202,9 @@ def saude_geral(arquivo_csv):
         users.append(user_dict)
 
     # Imprime cabeçalho da tabela
+    print('\033[1m')
     print(f"{'userID':<7}|{'Nome':<15}|{'Idade':<10}|{'Peso (kg)':<10}|{'Altura (m) ':<10}|{'Atividade':<15}|\033[91m{'Basal':<10}{'|''IMC':>14}\033[0m")
-    print("="*115)  # Linha de separação
+    print("-"*101)  # Linha de separação
 
     for user in users:
         userID = user['userID']
@@ -212,7 +219,8 @@ def saude_geral(arquivo_csv):
 
         print(f"{userID:<7}|{nome:<15}|{idade:<10}|{peso:<10}|{altura:<10} |{atividade:<15}|{result:<20}|{imc_user:<20}")
 
-    print("="*115)
+    print("="*101)
+
     
 
 
@@ -299,10 +307,10 @@ def treino(user_info):
     Returns:
         texto gerado pelo chat gpt (treino).
     """
-    objetivo = str(input('Digite seu objetivo de treino :  '))
-    condicao = str(input('Se possuir, digite alguma restrição física  :  '))
+    objetivo = str(input('Digite seu objetivo de treino, em poucas palavras :  '))
+    restri_fisica = str(input('Se possuir, digite alguma restrição física  :  '))
     prompt = f"""Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}
-    \napenas me de 3 treinos {objetivo} bem detalhados completo em tópicos, sem explicação"""
+    \napenas me de 3 treinos com o objetivo = ({objetivo}) bem detalhados completo em tópicos, restrição={restri_fisica}"""
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -328,8 +336,8 @@ def rotina(user_info):
     Returns:
         texto gerado pelo chat gpt (rotina).
     """
-    restricoes = str(input('Se houver digite uma restrição:  '))
-    prompt = f"Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}\napenas me de uma rotina de bons Habitos (24H) detalhada com base nisso em topicos, sem explicaçao"
+    restricoes = str(input('Se houver, digite sua restrição:  '))
+    prompt = f"Idade: {user_info['idade']}\n Peso: {user_info['peso']}\n altura(m): {user_info['altura']}\napenas me de uma rotina de bons Habitos (24H) detalhada com base nisso em topicos, restriçoes = {restricoes}"
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -363,6 +371,7 @@ def save_to_txt(user_info, content, filename):
     with open(filename, "w") as file:
         file.write(content)
     print(f"Arquivo '{filename}' salvo com sucesso.")
+    choice()
 
 
 
@@ -375,4 +384,35 @@ def save_to_pdf(user_info,content, filename):
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, content)
-    pdf.output(filename +'_'+ user_info['nome']+'.pdf')    
+    pdf.output(filename +'_'+ user_info['nome']+'.pdf') 
+    print(f"Arquivo '{filename}' salvo com sucesso.") 
+    choice()
+    
+
+
+def choice():
+    sleep(1.5)
+    print('='*25)
+
+    print(f"{'ESCOLHA UMA OPÇÃO':^25}")
+    print('='*25)
+    print('''
+0 -  FINALIZAR PROGRAMA
+1 -  VOLTAR PARA O MENU
+    ''')
+    user_choice = input(':')
+
+                
+    if user_choice in "01":
+        if user_choice == '1':
+            menu()
+        elif user_choice == '0':
+            print('Programa encerrado.')
+            exit()
+    else:
+        print('\033[38;5;196m-'*25)
+        print('DIGITE UM VALOR VALIDO')
+        print('\033[38;5;196m-\033[0m'*25)
+        sleep(1.5)
+        choice()
+        
